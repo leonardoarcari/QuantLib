@@ -31,6 +31,7 @@
 #endif
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <boost/container_hash/hash.hpp>
 #if defined(__GNUC__) && (((__GNUC__ == 4) && (__GNUC_MINOR__ >= 8)) || (__GNUC__ > 4))
 #pragma GCC diagnostic pop
 #endif
@@ -826,6 +827,15 @@ namespace QuantLib {
         }
     }
 
+    std::size_t hash_value(const Date& d) {
+        std::size_t seed = 0;
+        boost::hash_combine(seed, d.serialNumber());
+#ifdef QL_HIGH_RESOLUTION_DATE
+        boost::hash_combine(seed, d.dateTime());
+#endif
+
+        return seed;
+    }
 
     // date formatting
 
