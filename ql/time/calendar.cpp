@@ -40,6 +40,10 @@ namespace QuantLib {
         // Otherwise, add it.
         if (impl_->isBusinessDay(_d))
             impl_->addedHolidays.insert(_d);
+
+        // addedCache and removedCache are no longer valid
+        impl_->isAddedValid = false;
+        impl_->isRemovedValid = false;
     }
 
     void Calendar::removeHoliday(const Date& d) {
@@ -57,6 +61,10 @@ namespace QuantLib {
         // Otherwise, add it.
         if (!impl_->isBusinessDay(_d))
             impl_->removedHolidays.insert(_d);
+
+        // addedCache and removedCache are no longer valid
+        impl_->isAddedValid = false;
+        impl_->isRemovedValid = false;
     }
 
     Date Calendar::adjust(const Date& d,
@@ -318,4 +326,19 @@ namespace QuantLib {
        return result;
     }
 
+    void Calendar::refreshAdded() const {
+        QL_REQUIRE(impl_, "no calendar implementation provided");
+
+        impl_->addedCache.clear();
+        impl_->addedCache.insert(impl_->addedHolidays.begin(), impl_->addedHolidays.end());
+        impl_->isAddedValid = true;
+    }
+
+    void Calendar::refreshRemoved() const {
+        QL_REQUIRE(impl_, "no calendar implementation provided");
+
+        impl_->removedCache.clear();
+        impl_->removedCache.insert(impl_->removedHolidays.begin(), impl_->removedHolidays.end());
+        impl_->isRemovedValid = true;
+    }
 }

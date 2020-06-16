@@ -30,6 +30,7 @@
 #include <ql/time/date.hpp>
 #include <ql/time/businessdayconvention.hpp>
 #include <ql/shared_ptr.hpp>
+#include <boost/unordered_set.hpp>
 #include <set>
 #include <vector>
 #include <string>
@@ -61,11 +62,14 @@ namespace QuantLib {
         //! abstract base class for calendar implementations
         class Impl {
           public:
+            Impl() : isAddedValid(false), isRemovedValid(false) {}
             virtual ~Impl() {}
             virtual std::string name() const = 0;
             virtual bool isBusinessDay(const Date&) const = 0;
             virtual bool isWeekend(Weekday) const = 0;
-            std::set<Date> addedHolidays, removedHolidays;
+            boost::unordered_set<Date> addedHolidays, removedHolidays;
+            mutable std::set<Date> addedCache, removedCache;
+            mutable bool isAddedValid, isRemovedValid;
         };
         ext::shared_ptr<Impl> impl_;
       public:
@@ -188,6 +192,10 @@ namespace QuantLib {
             //! expressed relative to first day of year
             static Day easterMonday(Year);
         };
+
+      private:
+        void refreshAdded() const;
+        void refreshRemoved() const;
     };
 
     /*! Returns <tt>true</tt> iff the two calendars belong to the same
@@ -216,12 +224,18 @@ namespace QuantLib {
 
     inline const std::set<Date>& Calendar::addedHolidays() const {
         QL_REQUIRE(impl_, "no calendar implementation provided");
-        return impl_->addedHolidays;
+        if (!impl_->isAddedValid)
+            refreshAdded();
+
+        return impl_->addedCache;
     }
 
     inline const std::set<Date>& Calendar::removedHolidays() const {
         QL_REQUIRE(impl_, "no calendar implementation provided");
-        return impl_->removedHolidays;
+        if (!impl_->isRemovedValid)
+            refreshRemoved();
+
+        return impl_->removedCache;
     }
 
     inline bool Calendar::isBusinessDay(const Date& d) const {
