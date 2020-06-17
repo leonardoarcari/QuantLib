@@ -6,6 +6,8 @@
  Copyright (C) 2003 RiskMap srl
  Copyright (C) 2015 Maddalena Zanzi
  Copyright (c) 2015 Klaus Spanderen
+ Copyright (C) 2020 Leonardo Arcari
+ Copyright (C) 2020 Kline s.r.l.
 
  This file is part of QuantLib, a free-software/open-source library
  for financial quantitative analysts and developers - http://quantlib.org/
