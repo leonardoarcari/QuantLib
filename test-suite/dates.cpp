@@ -33,7 +33,7 @@
 #include <ql/utilities/dataparsers.hpp>
 
 #include <boost/unordered_set.hpp>
-#include <boost/container_hash/hash.hpp>
+#include <boost/functional/hash.hpp>
 #include <sstream>
 
 using namespace QuantLib;
