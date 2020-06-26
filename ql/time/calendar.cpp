@@ -42,10 +42,6 @@ namespace QuantLib {
         // Otherwise, add it.
         if (impl_->isBusinessDay(_d))
             impl_->addedHolidays.insert(_d);
-
-        // addedCache and removedCache are no longer valid
-        impl_->isAddedValid = false;
-        impl_->isRemovedValid = false;
     }
 
     void Calendar::removeHoliday(const Date& d) {
@@ -63,10 +59,6 @@ namespace QuantLib {
         // Otherwise, add it.
         if (!impl_->isBusinessDay(_d))
             impl_->removedHolidays.insert(_d);
-
-        // addedCache and removedCache are no longer valid
-        impl_->isAddedValid = false;
-        impl_->isRemovedValid = false;
     }
 
     Date Calendar::adjust(const Date& d,
@@ -80,7 +72,7 @@ namespace QuantLib {
         if (c == Following || c == ModifiedFollowing 
             || c == HalfMonthModifiedFollowing) {
             while (isHoliday(d1))
-                d1++;
+                ++d1;
             if (c == ModifiedFollowing 
                 || c == HalfMonthModifiedFollowing) {
                 if (d1.month() != d.month()) {
@@ -94,7 +86,7 @@ namespace QuantLib {
             }
         } else if (c == Preceding || c == ModifiedPreceding) {
             while (isHoliday(d1))
-                d1--;
+                --d1;
             if (c == ModifiedPreceding && d1.month() != d.month()) {
                 return adjust(d,Following);
             }
@@ -102,8 +94,8 @@ namespace QuantLib {
             Date d2 = d;
             while (isHoliday(d1) && isHoliday(d2))
             {
-                d1++;
-                d2--;
+                ++d1;
+                --d2;
             }
             if (isHoliday(d1))
                 return d2;
@@ -126,17 +118,17 @@ namespace QuantLib {
             Date d1 = d;
             if (n > 0) {
                 while (n > 0) {
-                    d1++;
+                    ++d1;
                     while (isHoliday(d1))
-                        d1++;
-                    n--;
+                        ++d1;
+                    --n;
                 }
             } else {
                 while (n < 0) {
-                    d1--;
+                    --d1;
                     while(isHoliday(d1))
-                        d1--;
-                    n++;
+                        --d1;
+                    ++n;
                 }
             }
             return d1;
@@ -186,9 +178,9 @@ namespace QuantLib {
             }
 
             if (isBusinessDay(from) && !includeFirst)
-                wd--;
+                --wd;
             if (isBusinessDay(to) && !includeLast)
-                wd--;
+                --wd;
 
             if (from > to)
                 wd = -wd;
@@ -326,21 +318,5 @@ namespace QuantLib {
                 result.push_back(d);
        }
        return result;
-    }
-
-    void Calendar::refreshAdded() const {
-        QL_REQUIRE(impl_, "no calendar implementation provided");
-
-        impl_->addedCache.clear();
-        impl_->addedCache.insert(impl_->addedHolidays.begin(), impl_->addedHolidays.end());
-        impl_->isAddedValid = true;
-    }
-
-    void Calendar::refreshRemoved() const {
-        QL_REQUIRE(impl_, "no calendar implementation provided");
-
-        impl_->removedCache.clear();
-        impl_->removedCache.insert(impl_->removedHolidays.begin(), impl_->removedHolidays.end());
-        impl_->isRemovedValid = true;
     }
 }

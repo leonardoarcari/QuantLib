@@ -32,7 +32,6 @@
 #include <ql/time/date.hpp>
 #include <ql/time/businessdayconvention.hpp>
 #include <ql/shared_ptr.hpp>
-#include <boost/unordered_set.hpp>
 #include <set>
 #include <vector>
 #include <string>
@@ -64,14 +63,11 @@ namespace QuantLib {
         //! abstract base class for calendar implementations
         class Impl {
           public:
-            Impl() : isAddedValid(false), isRemovedValid(false) {}
             virtual ~Impl() {}
             virtual std::string name() const = 0;
             virtual bool isBusinessDay(const Date&) const = 0;
             virtual bool isWeekend(Weekday) const = 0;
-            boost::unordered_set<Date> addedHolidays, removedHolidays;
-            mutable std::set<Date> addedCache, removedCache;
-            mutable bool isAddedValid, isRemovedValid;
+            std::set<Date> addedHolidays, removedHolidays;
         };
         ext::shared_ptr<Impl> impl_;
       public:
@@ -226,18 +222,14 @@ namespace QuantLib {
 
     inline const std::set<Date>& Calendar::addedHolidays() const {
         QL_REQUIRE(impl_, "no calendar implementation provided");
-        if (!impl_->isAddedValid)
-            refreshAdded();
 
-        return impl_->addedCache;
+        return impl_->addedHolidays;
     }
 
     inline const std::set<Date>& Calendar::removedHolidays() const {
         QL_REQUIRE(impl_, "no calendar implementation provided");
-        if (!impl_->isRemovedValid)
-            refreshRemoved();
 
-        return impl_->removedCache;
+        return impl_->removedHolidays;
     }
 
     inline bool Calendar::isBusinessDay(const Date& d) const {
@@ -249,9 +241,12 @@ namespace QuantLib {
         const Date& _d = d;
 #endif
 
-        if (impl_->addedHolidays.find(_d) != impl_->addedHolidays.end())
+        if (!impl_->addedHolidays.empty() &&
+            impl_->addedHolidays.find(_d) != impl_->addedHolidays.end())
             return false;
-        if (impl_->removedHolidays.find(_d) != impl_->removedHolidays.end())
+
+        if (!impl_->removedHolidays.empty() &&
+            impl_->removedHolidays.find(_d) != impl_->removedHolidays.end())
             return true;
 
         return impl_->isBusinessDay(_d);
